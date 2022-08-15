@@ -75,6 +75,7 @@ ordenamelo -ro
 
 Mientras se ejecuta se imprimen mensajes indicando los archivos, encontrados, renombrados, movidos, etc.
 
+![ordenamelo-run](docs/ordenamelo.png)
 
 
 ## Release History
