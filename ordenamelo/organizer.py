@@ -17,8 +17,8 @@ class Organizer:
         self.__config = Configurator()
 
     def organize(self, rename_only=False):
-        """Public interface, coordinates searching the files, renaming and, optionally, 
-        moving them."""
+        """Public interface, coordinates searching the files, renaming and, optionally,
+         moving them."""
         print(">>> INICIANDO ORDEN...")
         # Search files that have a keyword in the filename, get list of fullpaths.
         fullpaths = self.__search_all()
@@ -70,13 +70,13 @@ class Organizer:
 
         return selected_fullpaths
 
-    def __make_new_filename_payment(self, pdf_metadata, v):
-        """Make new payment receipt filename using year, month and the rule value from 
-        the config file"""
+    def __make_new_filename_payment(self, pdf_metadata, rule_value):
+        """Make new payment receipt filename using year, month and the rule value from
+         the config file"""
 
         creation_date = pdf_metadata['CreationDate'][2:8].strip()
         formatted_date = creation_date[:4] + '-' + creation_date[4:6]
-        new_filename = formatted_date + '-' + v
+        new_filename = formatted_date + '-' + rule_value
 
         return new_filename
 
@@ -86,11 +86,19 @@ class Organizer:
 
         creation_date = pdf_metadata['CreationDate'][2:10].strip()
         if 'canal' in pdf_text:
-            money = pdf_text[pdf_text.find('importe: $ ') + 11:pdf_text.find(',')].replace('.', '').strip()
-            name = pdf_text[pdf_text.find('destinatario: ') + 14:pdf_text.find('referencia')-30].title().replace(' ', '').strip()
+            # Nacion Argentina Bank receipt
+            money_start_idx = pdf_text.find('importe: $ ') + 11
+            money_end_idx = pdf_text.find(',')
+            name_start_idx = pdf_text.find('destinatario: ') + 14
+            name_end_idx = pdf_text.find('referencia') - 30
         else:
-            money = pdf_text[pdf_text.find('$ ') + 2:pdf_text.find(',')].replace('.', '').strip()
-            name = pdf_text[pdf_text.find('transferencia') + 13:pdf_text.find('$')].title().replace(' ', '').strip()
+            money_start_idx = pdf_text.find('$ ') + 2
+            money_end_idx = pdf_text.find(',')
+            name_start_idx = pdf_text.find('transferencia') + 13
+            name_end_idx = pdf_text.find('$')
+
+        money = pdf_text[money_start_idx : money_end_idx].replace('.', '').strip()
+        name = pdf_text[name_start_idx : name_end_idx].title().replace(' ', '').strip()
         formatted_date = creation_date[:4] + '-' + creation_date[4:6] + '-' + creation_date[6:]
         if len(name) > 20:
             name = name[:20]
@@ -142,7 +150,8 @@ class Organizer:
         year = pdf_creation_date[2:6]
 
         if self.__is_transfer(full_filename):
-            path_destination = self.__config.get_config_destination_path() / str(year) / 'transferencias'
+            path_destination = self.__config.get_config_destination_path() / str(year) \
+                                    / 'transferencias'
         else:
             path_destination = self.__config.get_config_destination_path() / str(year)
 
@@ -152,10 +161,11 @@ class Organizer:
             fullpath_origin.replace(path_destination / full_filename)
             print(f'>>> {full_filename} movido a {path_destination}.')
             return True
-        else:
-            print(f'>>> {full_filename} NO movido, ya existe en {path_destination}.')
+
+        # If I got here, file already exists
+        print(f'>>> {full_filename} NO movido, ya existe en {path_destination}.')
 
     def configure(self):
-        """Open the config file in the OS default text editor."""
+        """Public interface. Open the config file in the OS default text editor."""
 
         os.system('notepad ' + str(self.__config.get_config_filepath()))
