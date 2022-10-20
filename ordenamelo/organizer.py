@@ -6,7 +6,6 @@ import sys
 
 import pdfplumber
 
-
 from ordenamelo.configurator import Configurator
 
 
@@ -14,14 +13,14 @@ class Organizer:
     """Provides search, rename and move receipts functionality."""
 
     def __init__(self):
-        self.__config = Configurator()
+        self._config = Configurator()
 
     def organize(self, rename_only=False):
         """Public interface, coordinates searching the files, renaming and, optionally,
          moving them."""
         print(">>> INICIANDO ORDEN...")
         # Search files that have a keyword in the filename, get list of fullpaths.
-        fullpaths = self.__search_all()
+        fullpaths = self._search_all()
         if not fullpaths:
             print('>>> Nada que hacer!')
             print(">>> CHAO (╯°□°)╯")
@@ -32,7 +31,7 @@ class Organizer:
         renamed_full_filenames = []
         for fullpath in fullpaths:
             # get filename+extension or None
-            new_full_filename = self.__rename(fullpath)
+            new_full_filename = self._rename(fullpath)
             if new_full_filename is not None:
                 renamed_full_filenames.append(new_full_filename)
         print(f'>>> {len(renamed_full_filenames)} archivos renombrados.')
@@ -46,21 +45,21 @@ class Organizer:
             count = 0
             for full_filename in renamed_full_filenames:
                 # True if move was successfull
-                if self.__move(full_filename):
+                if self._move(full_filename):
                     count += 1
             print(f'>>> {count} archivos movidos.')
 
         print(">>> TODO EN ORDEN, OJALÁ TE DURE! (╯°□°)╯")
 
-    def __search_all(self):
+    def _search_all(self):
         """Search the payment receipts in the origin dir using the keywords in config
          file."""
         print('>>> Buscando comprobantes...')
-        pdf_fullpaths = [entry for entry in self.__config.get_config_origin_path().iterdir()
+        pdf_fullpaths = [entry for entry in self._config.get_config_origin_path().iterdir()
                          if entry.is_file() and entry.suffix == '.pdf']
         selected_fullpaths = []
-        for keyword in self.__config.get_config_keywords():
-            selected_fullpaths.extend([fullpath for fullpath in pdf_fullpaths 
+        for keyword in self._config.get_config_keywords():
+            selected_fullpaths.extend([fullpath for fullpath in pdf_fullpaths
                                                     if keyword in fullpath.name.lower()])
         if selected_fullpaths:
             print(f'>>> {len(selected_fullpaths)} comprobantes encontrados:')
@@ -70,7 +69,7 @@ class Organizer:
 
         return selected_fullpaths
 
-    def __make_new_filename_payment(self, pdf_metadata, rule_value):
+    def _make_new_filename_payment(self, pdf_metadata, rule_value):
         """Make new payment receipt filename using year, month and the rule value from
          the config file"""
 
@@ -80,7 +79,7 @@ class Organizer:
 
         return new_filename
 
-    def __make_new_filename_transfer(self, pdf_text, pdf_metadata):
+    def _make_new_filename_transfer(self, pdf_text, pdf_metadata):
         """Make new transfer filename using, recipient's name, amount and full date.
          Works with transfer receipts from Santander and Nación Argentina banks."""
 
@@ -106,7 +105,7 @@ class Organizer:
 
         return new_filename
 
-    def __rename_file(self, fullpath, filename, extension):
+    def _rename_file(self, fullpath, filename, extension):
         """Rename file with newname, but if it already exists do nothing."""
         full_filename = filename + extension
         try:
@@ -118,42 +117,42 @@ class Organizer:
 
             return None
 
-    def __rename(self, fullpath):
+    def _rename(self, fullpath):
         """Rename payment and transfer receipts."""
         with pdfplumber.open(fullpath) as pdf:
             pdf_text = pdf.pages[0].extract_text().strip().lower()
             pdf_metadata = pdf.metadata
         extension = '.pdf'
-        for k, v in self.__config.get_config_rules().items():
-            if k.lower() in pdf_text:
-                new_filename = self.__make_new_filename_payment(pdf_metadata, v)
-                return self.__rename_file(fullpath, new_filename, extension)
+        for key, value in self._config.get_config_rules().items():
+            if key.lower() in pdf_text:
+                new_filename = self._make_new_filename_payment(pdf_metadata, value)
+                return self._rename_file(fullpath, new_filename, extension)
 
         if 'transferencia' in fullpath.name.lower():
-            new_filename = self.__make_new_filename_transfer(pdf_text, pdf_metadata)
-            return self.__rename_file(fullpath, new_filename, extension)
+            new_filename = self._make_new_filename_transfer(pdf_text, pdf_metadata)
+            return self._rename_file(fullpath, new_filename, extension)
 
         # If I got here, it means there's no rule to apply and its not a transfer.
         print(f'>>> No se encuentra regla para {fullpath.name}.')
 
-    def __is_transfer(self, full_filename):
+    def _is_transfer(self, full_filename):
         """Check if file is a transfer recepit."""
-        return True if full_filename[8:10].isnumeric() else False
+        return full_filename[8:10].isnumeric()
 
-    def __move(self, full_filename):
+    def _move(self, full_filename):
         """Move file to new destination."""
         # year = datetime.now().year
         # parsed_pdf = parser.from_file(str(self._origin.joinpath(file)))
-        fullpath_origin = self.__config.get_config_origin_path() / full_filename
+        fullpath_origin = self._config.get_config_origin_path() / full_filename
         with pdfplumber.open(fullpath_origin) as pdf:
             pdf_creation_date = pdf.metadata['CreationDate']
         year = pdf_creation_date[2:6]
 
-        if self.__is_transfer(full_filename):
-            path_destination = self.__config.get_config_destination_path() / str(year) \
+        if self._is_transfer(full_filename):
+            path_destination = self._config.get_config_destination_path() / str(year) \
                                     / 'transferencias'
         else:
-            path_destination = self.__config.get_config_destination_path() / str(year)
+            path_destination = self._config.get_config_destination_path() / str(year)
 
         if not path_destination.exists():
             path_destination.mkdir(parents=True, exist_ok=False)
@@ -164,8 +163,9 @@ class Organizer:
 
         # If I got here, file already exists
         print(f'>>> {full_filename} NO movido, ya existe en {path_destination}.')
+        return False
 
     def configure(self):
         """Public interface. Open the config file in the OS default text editor."""
 
-        os.system('notepad ' + str(self.__config.get_config_filepath()))
+        os.system('notepad ' + str(self._config.get_config_filepath()))

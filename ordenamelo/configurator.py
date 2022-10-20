@@ -11,13 +11,13 @@ class Configurator:
     def __init__(self):
         """Set the path of the cfg. config file and load config contents to self."""
 
-        self.__filepath = Path(__file__).parent.resolve().joinpath('data/config.cfg')
-        self.__config = configparser.ConfigParser()
-        self.__config.read(self.__filepath)
+        self._filepath = Path(__file__).parent.resolve().joinpath('data/config.cfg')
+        self._config = configparser.ConfigParser()
+        self._config.read(self._filepath)
         try:
-            self.__paths = self.__config['paths']
-            self.__keywords = self.__config['keywords']
-            self.__rules = self.__config['rules']
+            self._paths = self._config['paths']
+            self._keywords = self._config['keywords']
+            self._rules = self._config['rules']
         except KeyError:
             print(">>> ERROR! No se encuentra el archivo de configuración o tiene errores.")
             sys.exit(1)
@@ -25,25 +25,25 @@ class Configurator:
     def get_config_origin_path(self):
         """Return search path for the receipts."""
 
-        return Path(self.__paths['origin'])
+        return Path(self._paths['origin'])
 
     def get_config_destination_path(self):
         """Return destination path for the renamed receipts."""
 
-        return Path(self.__paths['dest'])
+        return Path(self._paths['dest'])
 
     def get_config_keywords(self):
         """Return the keywords to identify the files to rename."""
 
-        return self.__keywords
+        return self._keywords
 
     def get_config_rules(self):
         """Return the rules that indicate given a value in the file's content (key),
         what is the word to rename it with (value)."""
 
-        return self.__rules
+        return self._rules
 
     def get_config_filepath(self):
         """Return the .cfg config filepath."""
 
-        return self.__filepath
+        return self._filepath
