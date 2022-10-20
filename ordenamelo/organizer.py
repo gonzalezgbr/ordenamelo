@@ -1,40 +1,37 @@
-# organizer.py
-
-"""Este es el módulo principal de ordenamelo."""
+"""This is ordenamelo's main module."""
 
 import os
 from pathlib import Path
-import pdfplumber
 import sys
+
+import pdfplumber
+
 
 from ordenamelo.configurator import Configurator
 
 
 class Organizer:
+    """Provides search, rename and move receipts functionality."""
 
     def __init__(self):
         self.__config = Configurator()
 
     def organize(self, rename_only=False):
-        """
-        Interfaz pública, convoca a la búsqueda de archivos a renombrar, al renombre y opcionalmente, a moverlos.
-
-        :param rename_only: indica que no se deben mover
-        :return: None
-        """
+        """Public interface, coordinates searching the files, renaming and, optionally, 
+        moving them."""
         print(">>> INICIANDO ORDEN...")
-        # Buscar files que matcheen la keyword en el nombre, obtengo lista de fullpaths.
+        # Search files that have a keyword in the filename, get list of fullpaths.
         fullpaths = self.__search_all()
         if not fullpaths:
             print('>>> Nada que hacer!')
             print(">>> CHAO (╯°□°)╯")
             sys.exit(0)
 
-        # Renombrar files encontrados.
+        # Rename found files.
         print('>>> Renombrando comprobantes...')
         renamed_full_filenames = []
         for fullpath in fullpaths:
-            # obtengo filename+extension o None
+            # get filename+extension or None
             new_full_filename = self.__rename(fullpath)
             if new_full_filename is not None:
                 renamed_full_filenames.append(new_full_filename)
@@ -43,30 +40,28 @@ class Organizer:
             print(">>> CHAO (╯°□°)╯")
             sys.exit(0)
 
-        # Mover files, a menos que se haya pedido que no.
+        # Move files, unless it was explicitely chosen by user not to.
         if not rename_only:
             print('>>> Moviendo archivos...')
             count = 0
             for full_filename in renamed_full_filenames:
-                # Obtengo True si logré mover
+                # True if move was successfull
                 if self.__move(full_filename):
                     count += 1
             print(f'>>> {count} archivos movidos.')
 
         print(">>> TODO EN ORDEN, OJALÁ TE DURE! (╯°□°)╯")
-        return None
 
     def __search_all(self):
-        """
-        Busca los archivos de pago en directorio origen utilizando las keywords de nombre.
-        :return [fullpaths que hicieron match]
-        """
+        """Search the payment receipts in the origin dir using the keywords in config
+         file."""
         print('>>> Buscando comprobantes...')
         pdf_fullpaths = [entry for entry in self.__config.get_config_origin_path().iterdir()
                          if entry.is_file() and entry.suffix == '.pdf']
         selected_fullpaths = []
         for keyword in self.__config.get_config_keywords():
-            selected_fullpaths.extend([fullpath for fullpath in pdf_fullpaths if keyword in fullpath.name.lower()])
+            selected_fullpaths.extend([fullpath for fullpath in pdf_fullpaths 
+                                                    if keyword in fullpath.name.lower()])
         if selected_fullpaths:
             print(f'>>> {len(selected_fullpaths)} comprobantes encontrados:')
             print('>>> '+'\n>>> '.join([fullpath.name for fullpath in selected_fullpaths]))
@@ -76,10 +71,9 @@ class Organizer:
         return selected_fullpaths
 
     def __make_new_filename_payment(self, pdf_metadata, v):
-        """
-        Genera el nuevo nombre de archivos de comprobantes de pago.
-        Usa año, mes y valor definido en la regla (tomada de la configuración).
-        """
+        """Make new payment receipt filename using year, month and the rule value from 
+        the config file"""
+
         creation_date = pdf_metadata['CreationDate'][2:8].strip()
         formatted_date = creation_date[:4] + '-' + creation_date[4:6]
         new_filename = formatted_date + '-' + v
@@ -87,13 +81,12 @@ class Organizer:
         return new_filename
 
     def __make_new_filename_transfer(self, pdf_text, pdf_metadata):
-        """
-        Genera el nuevo nombre de archivos de transferencia.
-        Usa nombre destinatario y monto con fecha completa. Funciona con comprobantes de santander y nación.
-        """
+        """Make new transfer filename using, recipient's name, amount and full date.
+         Works with transfer receipts from Santander and Nación Argentina banks."""
+
         creation_date = pdf_metadata['CreationDate'][2:10].strip()
         if 'canal' in pdf_text:
-            money = pdf_text[pdf_text.find('importe: $ ')+11:pdf_text.find(',')].replace('.', '').strip()
+            money = pdf_text[pdf_text.find('importe: $ ') + 11:pdf_text.find(',')].replace('.', '').strip()
             name = pdf_text[pdf_text.find('destinatario: ') + 14:pdf_text.find('referencia')-30].title().replace(' ', '').strip()
         else:
             money = pdf_text[pdf_text.find('$ ') + 2:pdf_text.find(',')].replace('.', '').strip()
@@ -106,7 +99,7 @@ class Organizer:
         return new_filename
 
     def __rename_file(self, fullpath, filename, extension):
-        """Renombra file usando el nuevo nombre, si ya existe, no lo modifica."""
+        """Rename file with newname, but if it already exists do nothing."""
         full_filename = filename + extension
         try:
             Path.rename(fullpath, fullpath.parent / full_filename)
@@ -118,7 +111,7 @@ class Organizer:
             return None
 
     def __rename(self, fullpath):
-        """"""
+        """Rename payment and transfer receipts."""
         with pdfplumber.open(fullpath) as pdf:
             pdf_text = pdf.pages[0].extract_text().strip().lower()
             pdf_metadata = pdf.metadata
@@ -132,14 +125,15 @@ class Organizer:
             new_filename = self.__make_new_filename_transfer(pdf_text, pdf_metadata)
             return self.__rename_file(fullpath, new_filename, extension)
 
-        # Si llego a este punto, es porque no hay regla ni es transferencia
+        # If I got here, it means there's no rule to apply and its not a transfer.
         print(f'>>> No se encuentra regla para {fullpath.name}.')
-        return None
 
     def __is_transfer(self, full_filename):
+        """Check if file is a transfer recepit."""
         return True if full_filename[8:10].isnumeric() else False
 
     def __move(self, full_filename):
+        """Move file to new destination."""
         # year = datetime.now().year
         # parsed_pdf = parser.from_file(str(self._origin.joinpath(file)))
         fullpath_origin = self.__config.get_config_origin_path() / full_filename
@@ -162,9 +156,6 @@ class Organizer:
             print(f'>>> {full_filename} NO movido, ya existe en {path_destination}.')
 
     def configure(self):
-        """
-        Abre el archivo de configuración en el editor de texto del sistema.
-        :return: None
-        """
+        """Open the config file in the OS default text editor."""
+
         os.system('notepad ' + str(self.__config.get_config_filepath()))
-        return None

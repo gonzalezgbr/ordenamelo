@@ -1,5 +1,3 @@
-# __init__.py
+"""Top-level package for ordenamelo."""
 
-"""Paquete de nivel superior de ordenamelo."""
-
-__version__ = '0.1.0'
+__version__ = '0.1.1'
