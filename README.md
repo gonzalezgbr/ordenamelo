@@ -1,42 +1,46 @@
-# ordenamelo
-> Una app cli para renombrar y mover esos odiosos comprobantes de pago mensuales!
+# ordenamelo (tidy up)
 
-![license](https://img.shields.io/badge/license-Apache-orange)
+**A cli app to rename and move those awful monthly payment receipts!**
+
+![Category](https://img.shields.io/badge/%23-scripting%20%7C%20automation-success)
 ![made_with](https://img.shields.io/badge/Made%20with-Python-blue)
-[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/gonzalezgbr/sachagrilla/graphs/commit-activity)
+![license](https://img.shields.io/badge/license-Apache-orange)
 
 
-Si haces muchos pagos por home banking y guardas los comprobantes pero no tienes ganas de ordenarlos, esta es tu solución!
+*Read this in other languages:* [*README.es*](README.es.md) 
 
-Con `ordenamelo` puedes renombrar los archivos pdf de comprobantes de pago o transferencias con un solo comando. 
-Opcionalmente, se pueden mover a una carpeta pre-definida.
+## What is it?
 
-## Instalación
+If you usually make *a lot* of payments through home banking and like to save the receipts in an orderly fashion, but *really* hate to do it by hand, this is your solution!
 
-> ⚠️ *Por el momento, `ordenamelo` solo se puede instalar como un paquete Python, es decir, tienes que tener Python y pip instalado en tu sistema.*   
+With `ordenamelo` you can rename the *pdf* files for payment or transfer receipts using a single command. They can also, optionally, be moved to a pre-defined folder. 
 
-1. Descargar `.whl` de la carpeta `dist/` de este repo.
-2. En una terminal ejecutar: 
+## Installation
+
+> ⚠️ *Currently, `ordenamelo` can only be installed as a Python package, meaning you need to have Python and pip installed on your system.*   
+
+1. Download `.whl` file from `dist/` folder in this repo.
+2. Open a terminal window and execute: 
 
 - OS X & Linux:
 
 ```shell
-python3 -m pip install nombre_del_wheel_.whl
+python3 -m pip install wheel_name.whl
 ```
    
 - Windows:
 
 ```shell
-py -m pip install nombre_del_wheel.whl 
+py -m pip install wheel_name.whl 
 ```
 
-## Como usar
+## Usage
 
-La primera vez vas a tener que configurar tus carpetas, palabras clave y reglas.
+The first time to use it, you will need to configure folders, keywords and rules. 
 
-> ⚠️ *Actualmente, `ordenamelo` solo funciona con comprobantes de los bancos Nación y Santander de Argentina.* 
+> ⚠️ *Currently, `ordenamelo` only works with bank receipts from Banco de la Nación Argentina and Banco Santander.* 
 
-### Configurar
+### 1. Configure
 
 ```shell
 ordenamelo --config 
@@ -44,53 +48,69 @@ ordenamelo --config
 
 ![config](docs/config.png)
 
-- Sección `paths`:
-  - `origin` carpeta donde buscar los comprobantes. Usualmente será *descargas*.
-  - `dest` carpeta a donde mover los comprobantes. Tener en cuenta que dentro de esta carpeta:
-    - se crea una carpeta por año para guardar los comprobantes
-    - se crea una carpeta `transferencias` dentro de la anual para guardar los comprobantes de transferencias
+- Section `paths`:
+  - `origin` folder where to look for receipts. Usually *downloads*.
+  - `dest` folder where to move the receipts after renaming them. Within this folder:
+    - a yearly folder will be created, to store receipts by date 
+    - a `transferencias` folder will be created, within the yearly one, to store transfer receipts 
 
-- Sección `keywords`:
-  - Se deben incluir las palabras que identifican a los archivos. Usualmente `pago` y `transferencia` son suficientes.
-  - Deben ir una por línea y con signo = al final.
+- Section `keywords`:
+  - Include the words that identify the files to rename. Usually `pago` and `transferencia` are good enough.
+  - They must go one on each line and with the = sign at the end. 
 
-- Sección `rules`: contiene las reglas para renombrar los archivos.
-  - El formato general del nombre es AÑO-MES-textoDerechaRule.pdf
-    - El año y el mes se toman automáticamente el día del pago (cuando se genera el pdf del comprobante).
-    - Las claves (texto a la izquierda) deben identificar de forma única ese tipo de comprobante, por ejemplo, número de cliente o de cuenta.
+- Section `rules`: contains the rules to rename the files.
+  - The general naming format is AÑO-MES-textoDerechaRule.pdf
+    - *año* and *mes* are automatically calculated from the payment date (the day that the pdf file is generated).
+    - The *keys* (text to the left) must uniquely identify that type of receipt, for example, client or account number.
 
-### Uso
+> *Don't worry, you do this configuration only once!*
 
-Para renombrar y mover todos los archivos que se encuentran:
+### 2. Use
+
+To rename and move all the files that match the keywords and the rules:
 
 ```shell
 ordenamelo 
 ```
 
-Solo renombrar, sin mover:
+Just rename, don't move:
 
 ```shell
 ordenamelo -ro
 ```
 
-Mientras se ejecuta se imprimen mensajes indicando los archivos, encontrados, renombrados, movidos, etc.
+During execution, you will see messages indicating found files, renamesd files, moved files, and warnings. 
 
 ![ordenamelo-run](docs/ordenamelo.png)
+
+## License
+
+This project is licensed under the terms of the `Apache` license.
+You can check out the full license [here](LICENSE).
+
+
+## Built with
+
+This project was built with `python`:
+- `argparse` to process the cli options.
+- `pathlib` to deal with files and folders.
+- `pdfplumber`, a *3rd party lib*, to access the pdf files metadata and content.
 
 
 ## Release History
 
+* 0.1.1
+    * Minor style refactoring
+
 * 0.1.0
-    * Primer release
+    * First release
 
+## Feedback
 
-## Meta
+Any feedback is greatly appreciated! You can contact me via [`twitter`](https://twitter.com/GargaraG) or [`linkedin`](https://www.linkedin.com/in/gonzalezgbr/). 
 
-By GG - [@GargaraG](https://twitter.com/GargaraG) 
+Thanks for checking out this project ♥
 
-Distribuido bajo licencia Apache. Ver ``LICENSE`` para más información.
+---
 
-[https://github.com/gonzalezgbr/](https://github.com/gonzalezgbr/)
-
-
-
+**By GG** · [`github` @gonzalezgbr](https://github.com/gonzalezgbr/) · [`linkedin` @gonzalezgbr](https://www.linkedin.com/in/gonzalezgbr/) · [`twitter` @GargaraG](https://twitter.com/GargaraG) 
