@@ -1,103 +1,108 @@
-# ordenamelo (tidy up)
+# ordenamelo
 
-**A cli app to rename and move those awful monthly payment receipts!**
+**¡Una app cli para renombrar y mover esos odiosos comprobantes de pago mensuales!**
 
 ![Category](https://img.shields.io/badge/%23-scripting%20%7C%20automation-success)
 ![made_with](https://img.shields.io/badge/Made%20with-Python-blue)
 ![license](https://img.shields.io/badge/license-Apache-orange)
 
+*Read this in english:* [*README.en*](README.en.md) 
 
-*Read this in other languages:* [*README.es*](README.es.md) 
+## ¿Qué es?
 
-## What is it?
+Si haces *muchos* pagos por home banking y te gusta guardar los comprobantes de manera ordenada pero *no quieres* hacerlo a mano, ¡esta es tu solución!
 
-If you usually make *a lot* of payments through home banking and like to save the receipts in an orderly fashion, but *really* hate to do it by hand, this is your solution!
+Con `ordenamelo` puedes renombrar los archivos *pdf* de comprobantes de pago o transferencias con un solo comando. 
+Opcionalmente, se pueden mover a una carpeta pre-definida.
 
-With `ordenamelo` you can rename the *pdf* files for payment or transfer receipts using a single command. They can also, optionally, be moved to a pre-defined folder. 
+## Instalación
 
-## Installation
+> ⚠️ *Por el momento, `ordenamelo` solo se puede instalar como un paquete Python, es decir, tienes que tener Python y pip instalado en tu sistema.*   
 
-> ⚠️ *Currently, `ordenamelo` can only be installed as a Python package, meaning you need to have Python and pip installed on your system.*   
+1. Descargar `.whl` de la carpeta `dist/` de este repo.
+2. En una terminal ejecutar: 
 
-1. Download `.whl` file from `dist/` folder in this repo.
-2. Open a terminal window and execute: 
-
-- OS X & Linux:
+- Linux:
 
 ```shell
-python3 -m pip install wheel_name.whl
+python3 -m pip install --user nombre_del_wheel_.whl
 ```
    
 - Windows:
 
 ```shell
-py -m pip install wheel_name.whl 
+py -m pip install nombre_del_wheel.whl 
 ```
 
-## Usage
+## Como usar
 
-The first time to use it, you will need to configure folders, keywords and rules. 
+La primera vez que lo uses, vas a tener que configurar tus carpetas, palabras clave y reglas.
 
-> ⚠️ *Currently, `ordenamelo` only works with bank receipts from Banco de la Nación Argentina and Banco Santander.* 
+> ⚠️ *Actualmente, `ordenamelo` solo funciona con comprobantes de los bancos Nación y Santander de Argentina.* 
 
-### 1. Configure
+### 1. Configurar
 
 ```shell
 ordenamelo --config 
 ```
 
-![config](docs/config.png)
+![config](docs/config-es.png)
 
-- Section `paths`:
-  - `origin` folder where to look for receipts. Usually *downloads*.
-  - `dest` folder where to move the receipts after renaming them. Within this folder:
-    - a yearly folder will be created, to store receipts by date 
-    - a `transferencias` folder will be created, within the yearly one, to store transfer receipts 
+- Sección `paths`:
+  - `origin` carpeta donde buscar los comprobantes. Usualmente será *descargas*.
+  - `dest` carpeta a donde mover los comprobantes. Tener en cuenta que dentro de esta carpeta:
+    - se crea una carpeta por año para guardar los comprobantes
+    - se crea una carpeta `transferencias` dentro de la anual para guardar los comprobantes de transferencias
 
-- Section `keywords`:
-  - Include the words that identify the files to rename. Usually `pago` and `transferencia` are good enough.
-  - They must go one on each line and with the = sign at the end. 
+- Sección `keywords`:
+  - Se deben incluir las palabras que identifican a los archivos. Usualmente `pago` y `transferencia` son suficientes.
+  - Deben ir una por línea y con signo = al final.
 
-- Section `rules`: contains the rules to rename the files.
-  - The general naming format is AÑO-MES-textoDerechaRule.pdf
-    - *año* and *mes* are automatically calculated from the payment date (the day that the pdf file is generated).
-    - The *keys* (text to the left) must uniquely identify that type of receipt, for example, client or account number.
+- Sección `rules`: contiene las reglas para renombrar los archivos.
+  - El formato general del nombre es AÑO-MES-textoDerechaRule.pdf
+    - El año y el mes se toman automáticamente el día del pago (cuando se genera el pdf del comprobante).
+    - Las claves (texto a la izquierda) deben identificar de forma única ese tipo de comprobante, por ejemplo, número de cliente o de cuenta.
 
-> *Don't worry, you do this configuration only once!*
+> *Esta configuración se hace una sola vez!*
 
-### 2. Use
+### 2. Usar
 
-To rename and move all the files that match the keywords and the rules:
+Para renombrar y mover todos los archivos que se encuentran:
 
 ```shell
 ordenamelo 
 ```
 
-Just rename, don't move:
+Solo renombrar, sin mover:
 
 ```shell
 ordenamelo -ro
 ```
 
-During execution, you will see messages indicating found files, renamesd files, moved files, and warnings. 
+Mientras se ejecuta se imprimen mensajes indicando los archivos, encontrados, renombrados, movidos, etc.
 
 ![ordenamelo-run](docs/ordenamelo.png)
 
-## License
+## Licencia
 
-This project is licensed under the terms of the `Apache` license.
-You can check out the full license [here](LICENSE).
+Este proyecto se distribuye bajo los términos de la licencia `Apache`.
+Puedes ver la licencia completa [aquí](LICENSE).
 
+## Hecho con
 
-## Built with
-
-This project was built with `python`:
-- `argparse` to process the cli options.
-- `pathlib` to deal with files and folders.
-- `pdfplumber`, a *3rd party lib*, to access the pdf files metadata and content.
-
+Este proyecto se desarrolló con `python` 🐍 
+- `argparse` para procesar las opciones de linea de comandos.
+- `pathlib` para gestionar con archivos y carpetas.
+- `pdfplumber`, una *lib de 3ros*, para acceder a los metadatos y contenido de los archivos *pdf*.
+- `pathvalidate`, una *lib de 3ros* para sanitizar nombres de archivos y rutas.
 
 ## Release History
+
+* 0.1.2
+    * Minor refactoring in configurator.py
+    * Add filename sanitization
+    * Add some error handling 
+    * Tested on linux
 
 * 0.1.1
     * Minor style refactoring
@@ -107,10 +112,8 @@ This project was built with `python`:
 
 ## Feedback
 
-Any feedback is greatly appreciated! You can contact me via [`twitter`](https://twitter.com/GargaraG) or [`linkedin`](https://www.linkedin.com/in/gonzalezgbr/). 
+¡Todo comentario y sugerencia es bienvenido! Puedes contactarme a través de [`linkedin`](https://www.linkedin.com/in/gonzalezgbr/). 
 
-Thanks for checking out this project ♥
+Gracias por visitar este proyecto ♥
 
 ---
-
-**By GG** · [`github` @gonzalezgbr](https://github.com/gonzalezgbr/) · [`linkedin` @gonzalezgbr](https://www.linkedin.com/in/gonzalezgbr/) · [`twitter` @GargaraG](https://twitter.com/GargaraG) 

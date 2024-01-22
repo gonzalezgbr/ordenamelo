@@ -2,8 +2,10 @@
 
 import os
 from pathlib import Path
+import platform
 import sys
 
+from pathvalidate import sanitize_filename
 import pdfplumber
 
 from ordenamelo.configurator import Configurator
@@ -19,7 +21,10 @@ class Organizer:
         """Public interface, coordinates searching the files, renaming and, optionally,
          moving them."""
         print(">>> INICIANDO ORDEN...")
+        self._check_user_filepaths()
         # Search files that have a keyword in the filename, get list of fullpaths.
+        print(f'>>> Origen: {self._config.origin_path}')
+        print(f'>>> Destino: {self._config.destination_path}')
         fullpaths = self._search_all()
         if not fullpaths:
             print('>>> Nada que hacer!')
@@ -51,14 +56,27 @@ class Organizer:
 
         print(">>> TODO EN ORDEN, OJALÁ TE DURE! (╯°□°)╯")
 
+    def _check_user_filepaths(self):
+        """Check if user filepaths exist"""
+        ok = True
+        if not self._config.origin_path.exists():
+            print(f">>> ERROR! no existe el path de origen ({self._config.origin_path})")
+            ok = False
+        if not self._config.destination_path.exists():
+            print(f">>> ERROR! no existe el path de destino ({self._config.destination_path})")
+            ok = False
+        if not ok:
+            print(">>> Tienes que modificar el path que no existe o crear la carpeta correspondiente")
+            sys.exit(1)
+
     def _search_all(self):
         """Search the payment receipts in the origin dir using the keywords in config
          file."""
         print('>>> Buscando comprobantes...')
-        pdf_fullpaths = [entry for entry in self._config.get_config_origin_path().iterdir()
+        pdf_fullpaths = [entry for entry in self._config.origin_path.iterdir()
                          if entry.is_file() and entry.suffix == '.pdf']
         selected_fullpaths = []
-        for keyword in self._config.get_config_keywords():
+        for keyword in self._config.keywords:
             selected_fullpaths.extend([fullpath for fullpath in pdf_fullpaths
                                                     if keyword in fullpath.name.lower()])
         if selected_fullpaths:
@@ -75,7 +93,7 @@ class Organizer:
 
         creation_date = pdf_metadata['CreationDate'][2:8].strip()
         formatted_date = creation_date[:4] + '-' + creation_date[4:6]
-        new_filename = formatted_date + '-' + rule_value
+        new_filename = formatted_date + '-' + sanitize_filename(rule_value)
 
         return new_filename
 
@@ -97,7 +115,7 @@ class Organizer:
             name_end_idx = pdf_text.find('$')
 
         money = pdf_text[money_start_idx : money_end_idx].replace('.', '').strip()
-        name = pdf_text[name_start_idx : name_end_idx].title().replace(' ', '').strip()
+        name = sanitize_filename(pdf_text[name_start_idx : name_end_idx].title().replace(' ', '').strip())
         formatted_date = creation_date[:4] + '-' + creation_date[4:6] + '-' + creation_date[6:]
         if len(name) > 20:
             name = name[:20]
@@ -123,7 +141,7 @@ class Organizer:
             pdf_text = pdf.pages[0].extract_text().strip().lower()
             pdf_metadata = pdf.metadata
         extension = '.pdf'
-        for key, value in self._config.get_config_rules().items():
+        for key, value in self._config.rules.items():
             if key.lower() in pdf_text:
                 new_filename = self._make_new_filename_payment(pdf_metadata, value)
                 return self._rename_file(fullpath, new_filename, extension)
@@ -143,16 +161,16 @@ class Organizer:
         """Move file to new destination."""
         # year = datetime.now().year
         # parsed_pdf = parser.from_file(str(self._origin.joinpath(file)))
-        fullpath_origin = self._config.get_config_origin_path() / full_filename
+        fullpath_origin = self._config.origin_path / full_filename
         with pdfplumber.open(fullpath_origin) as pdf:
             pdf_creation_date = pdf.metadata['CreationDate']
         year = pdf_creation_date[2:6]
 
         if self._is_transfer(full_filename):
-            path_destination = self._config.get_config_destination_path() / str(year) \
+            path_destination = self._config.destination_path / str(year) \
                                     / 'transferencias'
         else:
-            path_destination = self._config.get_config_destination_path() / str(year)
+            path_destination = self._config.destination_path / str(year)
 
         if not path_destination.exists():
             path_destination.mkdir(parents=True, exist_ok=False)
@@ -167,5 +185,11 @@ class Organizer:
 
     def configure(self):
         """Public interface. Open the config file in the OS default text editor."""
-
-        os.system('notepad ' + str(self._config.get_config_filepath()))
+        def_text_ed = {
+            'Linux': 'gnome-text-editor',
+            'Windows': 'notepad'}
+        result = os.system(def_text_ed[platform.system()] + ' ' + str(self._config.filepath))
+        
+        if os.waitstatus_to_exitcode(result) != 0:
+            print(">>> ERROR! no encuentro un editor de texto para abrir el archivo de configuración")
+            print(f">>> Si te sientes valiente, abrilo y editalo a mano. Está en {self._config.filepath}")
